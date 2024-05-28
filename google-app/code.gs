@@ -1,6 +1,5 @@
 function main() {
-  var [key, times] = listCalendars()
-  pushToFireBase(key, times)
+  pushToFireBase('events', listCalendars())
 }
 
 
@@ -8,16 +7,16 @@ function listCalendars() {
   var today = new Date()
   var events = CalendarApp.getCalendarById(CALENDAR_ID).getEventsForDay(today)
 
-  var times = events.reduce((prev, current) => [...prev,
-  `${current.getStartTime().getHours()}:${current.getStartTime().getMinutes()}`,
-  `${current.getEndTime().getHours()}:${current.getEndTime().getMinutes()}`
-  ], [])
-
-  var dayKey = `${today.getFullYear()}${today.getMonth()+1}${today.getDate()}`
-  return [dayKey, times]
+  return events.reduce((prev, current) => ({
+    ...prev,
+    [`${zeroPad(current.getStartTime().getHours(), 2)}${zeroPad(current.getStartTime().getMinutes(), 2)}`]: true,
+    [`${zeroPad(current.getEndTime().getHours(), 2)}${zeroPad(current.getEndTime().getMinutes(), 2)}`]: true
+  }), {})
 }
 
 function pushToFireBase(key, data) {
   var firebase = FirebaseApp.getDatabaseByUrl(DB_URL, DB_KEY)
   firebase.setData(key, data)
 }
+
+const zeroPad = (num, places) => String(num).padStart(places, '0')
